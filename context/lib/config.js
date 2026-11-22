@@ -39,6 +39,8 @@ export const CONFIG_DEFAULTS = Object.freeze({
   outlineDb: true,
   searchCacheTtlMs: 15000,
   cacheWatch: true,
+  // Disable ONLY unsafe PreInvocation UI metadata on affected CLI hosts; keep cache diagnostics active.
+  uiOnlyAlerts: true,
   cacheTtlSec: null,
   windowTokens: null,
   warnTokens: null,
@@ -399,6 +401,7 @@ export function getConfigSnapshot(options = {}) {
 
   // 5. PreInvocation KV-cache watch & thresholds
   pick("cacheWatch", parseDisableEnvFlag(env?.AGY_DART_DISABLE_CACHE_WATCH), cfgBool("cacheWatch"));
+  pick("uiOnlyAlerts", parseDisableEnvFlag(env?.AGY_DART_DISABLE_UI_ONLY_ALERTS), cfgBool("uiOnlyAlerts"));
   pick("cacheTtlSec", parsePositiveNumber(env?.AGY_DART_CACHE_TTL_SEC), parsePositiveNumber(cfg.cacheTtlSec));
   pick("windowTokens", parsePositiveNumber(env?.AGY_DART_WINDOW_TOKENS), parsePositiveNumber(cfg.windowTokens));
   pick("warnTokens", parsePositiveNumber(env?.AGY_DART_WARN_TOKENS), parsePositiveNumber(cfg.warnTokens));
@@ -527,6 +530,7 @@ export function formatEffectiveConfigLines(snapshot = getConfigSnapshot(), extra
     "diffRead",
     "cliFilter",
     "cacheWatch",
+    "uiOnlyAlerts",
     "stallWatchdog",
     "stablePrefixOnly",
     "outlineDb",

@@ -636,7 +636,9 @@ async function main() {
     store.close();
     store = null;
 
-    if (alerts.length === 0) {
+    // CLI 1.5.14 may panic on metadata.user_markdown (upstream #1394).
+    // Keep diagnostics and alert accounting, but do not inject model-visible text as a fallback.
+    if (alerts.length === 0 || effectiveCfg.uiOnlyAlerts === false) {
       process.stdout.write("{}\n");
       return;
     }

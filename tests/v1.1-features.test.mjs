@@ -292,6 +292,30 @@ test("P0 PreInvocation hook + benchmark cache CLI: emits UI-only zero-prefix-pol
     assert.ok(md.includes("KV-cache TTL"));
     assert.ok(md.includes("media/image"));
 
+    // CLI 1.5.14 ScrubInternalFields map<string,string> compatibility:
+    // disable UI-only injection while retaining cacheWatch analysis and diagnostics.
+    const compatDb = path.join(tmpDir, "compat-ui-off.sqlite");
+    const uiOff = runHook(
+      "hooks/pre-invocation.mjs",
+      { conversationId: "inv-sess-ui-off", transcriptPath, invocationNum: 11 },
+      compatDb,
+      { AGY_DART_DISABLE_UI_ONLY_ALERTS: "1" }
+    );
+    assert.equal(uiOff.injectSteps, undefined, "no unsafe metadata or model-visible fallback text");
+    assert.ok(fs.existsSync(compatDb), "cache diagnostic DB must still be written");
+
+    const uiConfigPath = path.join(tmpDir, "compat-config.json");
+    fs.writeFileSync(uiConfigPath, JSON.stringify({ cacheWatch: true, uiOnlyAlerts: false }));
+    const uiCfgDb = path.join(tmpDir, "compat-config.sqlite");
+    const uiCfgOff = runHook(
+      "hooks/pre-invocation.mjs",
+      { conversationId: "inv-sess-config-off", transcriptPath, invocationNum: 11 },
+      uiCfgDb,
+      { AGY_DART_CONFIG_PATH: uiConfigPath }
+    );
+    assert.equal(uiCfgOff.injectSteps, undefined);
+    assert.ok(fs.existsSync(uiCfgDb), "cache analysis remains enabled under config override");
+
     // Second invocation on unchanged transcript MUST NOT spam (deduplicated)
     const r2 = runHook(
       "hooks/pre-invocation.mjs",
